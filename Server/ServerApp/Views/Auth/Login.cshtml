@@ -1,0 +1,53 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Вхід в систему - Admin Panel</title>
+    <style>
+            body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f6f9; margin: 0; }
+            .login-card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 320px; }
+            .form-group { margin-bottom: 15px; }
+            label { display: block; margin-bottom: 5px; font-weight: bold; }
+            input[type="text"], input[type="password"] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+            button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+            button:hover { background-color: #0056b3; }
+            .error { color: red; margin-bottom: 10px; }
+            .success { color: green; margin-bottom: 10px; word-break: break-all; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>Вхід в систему</h2>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="error">@ViewBag.Error</div>
+        }
+
+        @if (ViewBag.Message != null)
+        {
+            <div class="success">
+                <p><strong>@ViewBag.Message</strong></p>
+                <small><strong>Ваш JWT Token:</strong></small>
+                <textarea rows="4" style="width:100%;">@ViewBag.Token</textarea>
+            </div>
+        }
+
+        <form action="/Auth/Login" method="post">
+            <div class="form-group">
+                <label>Логін</label>
+                <input type="text" name="username" required />
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" name="password" required />
+            </div>
+            <button type="submit">Увійти</button>
+        </form>
+    </div>
+</body>
+</html>
