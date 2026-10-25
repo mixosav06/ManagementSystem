@@ -6,18 +6,19 @@ using ServerApp.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Додаємо підтримку контролерів та представлень (MVC + API)
+// 1. Додаємо підтримку контролерів (MVC + REST API)
 builder.Services.AddControllersWithViews();
 
 // 2. Підключення БД SQLite
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 3. Налаштування JWT Аутентифікації
+// 3. Зчитування параметрів JWT
 var jwtKey = builder.Configuration["Jwt:Key"]!;
 var jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
 var jwtAudience = builder.Configuration["Jwt:Audience"]!;
 
+// 4. Налаштування JWT Аутентифікації
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -40,54 +41,44 @@ builder.Services.AddAuthentication(options =>
     {
         OnMessageReceived = context =>
         {
-            // Читаємо токен з Cookie
-            context.Token = context.Request.Cookies["X-Access-Token"];
-            return Task.CompletedTask;
-        },
-        OnChallenge = context =>
-        {
-            // Якщо не авторизований — перенаправляємо на /Auth/Login замість 404
-            context.HandleResponse();
-            context.Response.Redirect("/Auth/Login");
-            return Task.CompletedTask;
-        }
-    };
-
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtIssuer,
-        ValidAudience = jwtAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-    };
-    options.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
-        {
             context.Token = context.Request.Cookies["X-Access-Token"];
             return Task.CompletedTask;
         }
     };
-
 });
 
 builder.Services.AddAuthorization();
 
+// 5. Налаштування Swagger UI з розв'язанням конфліктів назв типів
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.CustomSchemaIds(type => type.ToString());
+});
+
 var app = builder.Build();
 
-// 4. Налаштування Middleware
+// 6. Middleware для Swagger
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Parking Management API v1");
+        c.RoutePrefix = "swagger";
+    });
+}
+
 app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 5. Маршрутизація для MVC та API
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Auth}/{action=Login}/{id?}");
+
+app.MapControllers();
 
 app.Run();

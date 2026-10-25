@@ -1,9 +1,8 @@
-
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using ServerApp.Models;
+using Microsoft.AspNetCore.Mvc;
 using ServerApp.Data;
+using ServerApp.Models;
 
 namespace ServerApp.Controllers;
 
@@ -18,139 +17,106 @@ public class AttendantsController : Controller
         _context = context;
     }
 
-    // GET: ATTENDANTS
+    // GET: /Attendants
     [HttpGet]
-    public async Task<IActionResult> Index()    
+    public async Task<IActionResult> Index()
     {
         return View(await _context.Attendants.ToListAsync());
     }
 
-    // GET: ATTENDANTS/Details/5
+    // GET: /Attendants/Details/5
+    [HttpGet("Details/{id}")]
     public async Task<IActionResult> Details(int? id)
     {
-        if (id == null)
-        {
-            return NotFound();
-        }
+        if (id == null) return NotFound();
 
         var attendant = await _context.Attendants
             .FirstOrDefaultAsync(m => m.ID == id);
-        if (attendant == null)
-        {
-            return NotFound();
-        }
+
+        if (attendant == null) return NotFound();
 
         return View(attendant);
     }
 
-    // GET: ATTENDANTS/Create
+    // GET: /Attendants/Create
+    [HttpGet("Create")]
     public IActionResult Create()
     {
         return View();
     }
 
-    // POST: ATTENDANTS/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
+    // POST: /Attendants/Create
+    [HttpPost("Create")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("ID,Name,Email,PasswordHash,ParkingSpots,Reservations")] Attendant attendant)
+    public async Task<IActionResult> Create([Bind("ID,Name,Email,PasswordHash")] Attendant attendant)
     {
+        // Очищаємо валідацію для полів, яких немає у формі
+        ModelState.Remove("ParkingSpots");
+        ModelState.Remove("Reservations");
+
         if (ModelState.IsValid)
         {
             _context.Add(attendant);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
         return View(attendant);
     }
 
-    // GET: ATTENDANTS/Edit/5
+    // GET: /Attendants/Edit/5
+    [HttpGet("Edit/{id}")]
     public async Task<IActionResult> Edit(int? id)
     {
-        if (id == null)
-        {
-            return NotFound();
-        }
+        if (id == null) return NotFound();
 
         var attendant = await _context.Attendants.FindAsync(id);
-        if (attendant == null)
-        {
-            return NotFound();
-        }
+        if (attendant == null) return NotFound();
+
         return View(attendant);
     }
 
-    // POST: ATTENDANTS/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
+    // POST: /Attendants/Edit/5
+    [HttpPost("Edit/{id}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? id, [Bind("ID,Name,Email,PasswordHash,ParkingSpots,Reservations")] Attendant attendant)
+    public async Task<IActionResult> Edit(int id, [Bind("ID,Name,Email,PasswordHash")] Attendant attendant)
     {
-        if (id != attendant.ID)
-        {
-            return NotFound();
-        }
+        if (id != attendant.ID) return NotFound();
 
         if (ModelState.IsValid)
         {
-            try
-            {
-                _context.Update(attendant);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!AttendantExists(attendant.ID))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _context.Update(attendant);
+            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
         return View(attendant);
     }
 
-    // GET: ATTENDANTS/Delete/5
+    // GET: /Attendants/Delete/5
+    [HttpGet("Delete/{id}")]
     public async Task<IActionResult> Delete(int? id)
     {
-        if (id == null)
-        {
-            return NotFound();
-        }
+        if (id == null) return NotFound();
 
         var attendant = await _context.Attendants
             .FirstOrDefaultAsync(m => m.ID == id);
-        if (attendant == null)
-        {
-            return NotFound();
-        }
+
+        if (attendant == null) return NotFound();
 
         return View(attendant);
     }
 
-    // POST: ATTENDANTS/Delete/5
-    [HttpPost, ActionName("Delete")]
+    // POST: /Attendants/Delete/5
+    [HttpPost("Delete/{id}"), ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? id)
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
         var attendant = await _context.Attendants.FindAsync(id);
         if (attendant != null)
         {
             _context.Attendants.Remove(attendant);
+            await _context.SaveChangesAsync();
         }
-
-        await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
-    }
-
-    private bool AttendantExists(int? id)
-    {
-        return _context.Attendants.Any(e => e.ID == id);
     }
 }
