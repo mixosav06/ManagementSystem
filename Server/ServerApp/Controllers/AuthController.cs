@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
+
 namespace ServerApp.Controllers;
 
 public class AuthController : Controller
