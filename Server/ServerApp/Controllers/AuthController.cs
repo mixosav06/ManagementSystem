@@ -2,72 +2,73 @@
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-
+using ServerApp.Data;
+using ServerApp.Models;
 
 namespace ServerApp.Controllers;
 
-public class AuthController : Controller
+[ApiController]
+[Route("api/[controller]")]
+public class AuthController : ControllerBase
 {
+    private readonly AppDbContext _context;
     private readonly IConfiguration _config;
 
-    // Хардкод адміністратора для швидкої перевірки
-    private const string AdminUsername = "admin";
-    private const string AdminPassword = "admin123";
-
-    public AuthController(IConfiguration config)
+    public AuthController(AppDbContext context, IConfiguration config)
     {
+        _context = context;
         _config = config;
     }
 
-    // GET: /Auth/Login (Сторінка з формою)
-    [HttpGet]
-    public IActionResult Login()
+    // POST: /api/auth/login
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginDto request)
     {
-        return View();
-    }
-
-    // POST: /Auth/Login (Отримання токена або авторизація)
-    [HttpPost]
-    public IActionResult Login([FromForm] string username, [FromForm] string password)
-    {
-        if (username != AdminUsername || password != AdminPassword)
+        if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
         {
-            ViewBag.Error = "Невірний логін або пароль!";
-            return View();
+            return BadRequest(new { message = "Email та пароль є обов'язковими." });
         }
 
-        var token = GenerateJwtToken(username);
+        // Пошук користувача/працівника в БД SQLite
+        var user = await _context.Attendants.FirstOrDefaultAsync(u => u.Email == request.Email);
 
-        // Зберігаємо токен у cookie для доступу через браузер
-        Response.Cookies.Append("X-Access-Token", token, new CookieOptions
+        // Перевірка збігу хешу пароля (або простого рядка / BCrypt)
+        if (user == null || (user.PasswordHash != request.Password && !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash)))
         {
-            HttpOnly = true,
-            Secure = true
-        });
+            return Unauthorized(new { message = "Невірний email або пароль." });
+        }
 
-        ViewBag.Token = token;
-        ViewBag.Message = "Успішна авторизація!";
-        return View();
+        // Генерація JWT-токена
+        var token = GenerateJwtToken(user);
+
+        return Ok(new
+        {
+            token = token,
+            userID = user.ID,
+            email = user.Email,
+            name = user.Name
+        });
     }
 
-    // Метод генерації JWT-токена
-    private string GenerateJwtToken(string username)
+    private string GenerateJwtToken(Attendant user)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.Name, username),
-            new Claim(ClaimTypes.Role, "Admin")
+            new Claim(ClaimTypes.NameIdentifier, user.ID.ToString()),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Name, user.Name)
         };
 
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(2),
+            expires: DateTime.UtcNow.AddHours(8),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
