@@ -1,10 +1,13 @@
-﻿namespace ClientApp
+﻿using ClientApp.Views;
+
+namespace ClientApp;
+
+public partial class AppShell : Shell
 {
-    public partial class AppShell : Shell
+    public AppShell()
     {
-        public AppShell()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+
+        Routing.RegisterRoute("ActionPage", typeof(ActionPage));
     }
 }

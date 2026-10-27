@@ -3,12 +3,20 @@
     x:Class="ClientApp.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:ClientApp"
-    Title="ClientApp">
+    xmlns:views="clr-namespace:ClientApp.Views"
+    Shell.FlyoutBehavior="Disabled"
+    Shell.BackgroundColor="#2E7D32"
+    Shell.TitleColor="White"
+    Shell.ForegroundColor="White">
 
     <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+        Title="Логін"
+        ContentTemplate="{DataTemplate views:LoginPage}"
+        Route="LoginPage" />
+
+    <ShellContent
+        Title="Місця"
+        ContentTemplate="{DataTemplate views:ItemsPage}"
+        Route="ItemsPage" />
 
 </Shell>

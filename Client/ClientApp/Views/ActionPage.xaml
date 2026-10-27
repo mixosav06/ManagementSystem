@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ClientApp.ViewModels"
+             x:Class="ClientApp.Views.ActionPage"
+             Title="Створення бронювання"
+             BackgroundColor="#F4F9F5">
+
+    <ContentPage.BindingContext>
+        <vm:ActionViewModel />
+    </ContentPage.BindingContext>
+
+    <VerticalStackLayout Padding="20" Spacing="15">
+        <Label Text="Нове бронювання" 
+               FontSize="22" 
+               FontAttributes="Bold"
+               TextColor="#1B5E20"/>
+
+        <Label Text="ID Паркувального місця:" TextColor="#2E7D32"/>
+        <Entry Text="{Binding SpotID}" 
+               Keyboard="Numeric"
+               TextColor="#1B5E20"
+               BackgroundColor="White"/>
+
+        <Label Text="ID Працівника:" TextColor="#2E7D32"/>
+        <Entry Text="{Binding UserID}" 
+               Keyboard="Numeric"
+               TextColor="#1B5E20"
+               BackgroundColor="White"/>
+
+        <Button Text="Підтвердити бронювання" 
+                Command="{Binding CreateActionCommand}" 
+                BackgroundColor="#2E7D32" 
+                TextColor="White"
+                CornerRadius="8"
+                Margin="0,20,0,0"/>
+    </VerticalStackLayout>
+</ContentPage>
