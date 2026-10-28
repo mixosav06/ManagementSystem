@@ -6,7 +6,7 @@ using ServerApp.Models;
 
 namespace ServerApp.Controllers;
 
-[Authorize]
+//[Authorize]
 [Route("[controller]")]
 public class AttendantsController : Controller
 {

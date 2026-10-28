@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -6,23 +7,29 @@ using ServerApp.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Додавання контролерів з підтримкою Views (MVC)
+// Додаємо MVC з підтримкою Views
 builder.Services.AddControllersWithViews();
 
-// Налаштування БД (SQLite)
+// Налаштування БД
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Конфігурація JWT Аутентифікації
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
 
+// Налаштування двох схем: Cookies (для браузера) та JwtBearer (для REST API)
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 })
-.AddJwtBearer(options =>
+.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+{
+    options.LoginPath = "/Auth/Login";
+    options.AccessDeniedPath = "/Auth/Login";
+    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+})
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;
@@ -39,7 +46,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Налаштування Swagger із кнопкою авторизації (Authorize)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -70,7 +76,6 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Налаштування Middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -80,7 +85,6 @@ if (app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseRouting();
 
-// Переконайтеся, що UseAuthentication викликається ДО UseAuthorization
 app.UseAuthentication();
 app.UseAuthorization();
 
