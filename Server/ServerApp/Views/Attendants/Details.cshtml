@@ -1,52 +1,30 @@
 @model ServerApp.Models.Attendant
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Деталі працівника";
 }
 
-<h1>Details</h1>
+<h2>Деталі працівника #@Model.ID</h2>
+<hr />
 
-<div>
-    <h4>Attendant</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Email)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Email)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PasswordHash)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PasswordHash)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ParkingSpots)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ParkingSpots)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Reservations)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Reservations)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.ID">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="card shadow-sm col-md-8">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-4">ID</dt>
+            <dd class="col-sm-8 fw-bold">@Model.ID</dd>
+
+            <dt class="col-sm-4">Ім'я працівника</dt>
+            <dd class="col-sm-8">@Model.Name</dd>
+
+            <dt class="col-sm-4">Email</dt>
+            <dd class="col-sm-8">@Model.Email</dd>
+
+            <dt class="col-sm-4">Хеш пароля</dt>
+            <dd class="col-sm-8"><span class="badge bg-secondary">@Model.PasswordHash</span></dd>
+        </dl>
+    </div>
+    <div class="card-footer bg-light">
+        <a href="/Attendants/Edit/@Model.ID" class="btn btn-warning">Редагувати</a>
+        <a href="/Attendants" class="btn btn-secondary ms-2">Назад до списку</a>
+    </div>
 </div>

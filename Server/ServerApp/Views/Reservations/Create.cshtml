@@ -5,8 +5,6 @@
     ViewData["Title"] = "Створити бронювання";
     var users = ViewBag.UserID as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
     var spots = ViewBag.SpotID as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
-    var today = DateTime.Now.ToString("yyyy-MM-dd");
-    var currentHour = DateTime.Now.Hour.ToString("D2");
 }
 
 <h2>Створити бронювання</h2>
@@ -14,11 +12,16 @@
 
 <div class="row">
     <div class="col-md-6">
-        <form action="/Reservations/Create" method="post" onsubmit="prepareDateTime()">
+        <form action="/Reservations/Create" method="post">
             @Html.AntiForgeryToken()
 
-            <!-- Приховане поле для підсумкової дати та часу -->
-            <input type="hidden" id="fullReservationDate" name="ReservationDate" />
+            <!-- Блок виведення помилок валідації -->
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    @Html.ValidationSummary(false, "", new { @class = "mb-0" })
+                </div>
+            }
 
             <div class="mb-3">
                 <label class="form-label fw-bold">Працівник</label>
@@ -48,40 +51,11 @@
                 </select>
             </div>
 
-            <!-- Дата та Час від початку години -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">Дата початку</label>
-                    <input type="date" id="startDate" class="form-control" value="@today" required />
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">Час (початок години)</label>
-                    <select id="startHour" class="form-select" required>
-                        @for (int h = 0; h < 24; h++)
-                        {
-                            var hourStr = h.ToString("D2");
-                            var isSelected = hourStr == currentHour ? "selected" : "";
-                            <option value="@hourStr" selected="@isSelected">@hourStr:00</option>
-                        }
-                    </select>
-                </div>
-            </div>
-
-            <!-- Тривалість у годинах -->
             <div class="mb-3">
-                <label class="form-label fw-bold">Тривалість (вибір годин)</label>
-                <select name="DurationHours" class="form-select" required>
-                    <option value="1">1 година</option>
-                    <option value="2">2 години</option>
-                    <option value="3">3 години</option>
-                    <option value="4">4 години</option>
-                    <option value="8">8 годин</option>
-                    <option value="12">12 годин</option>
-                    <option value="24">24 години (доба)</option>
-                </select>
+                <label class="form-label fw-bold">Дата та час бронювання (початок години)</label>
+                <input name="ReservationDate" class="form-control" type="datetime-local" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:00")" required />
             </div>
 
-            <!-- Вибір статусу (включаючи Закрито) -->
             <div class="mb-3">
                 <label class="form-label fw-bold">Статус місця / Бронювання</label>
                 <select name="Status" class="form-select" required>
@@ -99,9 +73,3 @@
         </form>
     </div>
 </div>
-
-<script>
-    function prepareDateTime() {
-    const dateVal = document.getElementById('startDate').value;
-    const hourVal = document.getElementById('startHour').value;
-    document.getElementById('fullReservationDate').value = `${dateVal}T${hourVal}:
