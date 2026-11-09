@@ -1,151 +1,182 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ServerApp.Data;
 using ServerApp.Models;
 
-//[Authorize]
-public class ReservationsController : Controller
+namespace ServerApp.Controllers
 {
-    private readonly AppDbContext _context;
-
-    public ReservationsController(AppDbContext context)
+    [Route("Reservations")]
+    public class ReservationsController : Controller
     {
-        _context = context;
-    }
+        private readonly AppDbContext _context;
 
-    // GET: RESERVATIONS
-    public async Task<IActionResult> Index()    
-    {
-        return View(await _context.Reservations.ToListAsync());
-    }
-
-    // GET: RESERVATIONS/Details/5
-    public async Task<IActionResult> Details(int? id)
-    {
-        if (id == null)
+        public ReservationsController(AppDbContext context)
         {
-            return NotFound();
+            _context = context;
         }
 
-        var reservation = await _context.Reservations
-            .FirstOrDefaultAsync(m => m.ID == id);
-        if (reservation == null)
+        // GET: /Reservations або /Reservations/Index
+        [HttpGet("")]
+        [HttpGet("Index")]
+        public async Task<IActionResult> Index()
         {
-            return NotFound();
+            var reservations = await _context.Reservations
+                .Include(r => r.Spot)
+                .ToListAsync();
+
+            return View(reservations);
         }
 
-        return View(reservation);
-    }
-
-    // GET: RESERVATIONS/Create
-    public IActionResult Create()
-    {
-        return View();
-    }
-
-    // POST: RESERVATIONS/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("ID,UserID,User,SpotID,Spot,ReservationDate,Status")] Reservation reservation)
-    {
-        if (ModelState.IsValid)
+        // GET: /Reservations/Details/5
+        [HttpGet("Details/{id?}")]
+        public async Task<IActionResult> Details(int? id)
         {
-            _context.Add(reservation);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-        return View(reservation);
-    }
-
-    // GET: RESERVATIONS/Edit/5
-    public async Task<IActionResult> Edit(int? id)
-    {
-        if (id == null)
-        {
-            return NotFound();
-        }
-
-        var reservation = await _context.Reservations.FindAsync(id);
-        if (reservation == null)
-        {
-            return NotFound();
-        }
-        return View(reservation);
-    }
-
-    // POST: RESERVATIONS/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? id, [Bind("ID,UserID,User,SpotID,Spot,ReservationDate,Status")] Reservation reservation)
-    {
-        if (id != reservation.ID)
-        {
-            return NotFound();
-        }
-
-        if (ModelState.IsValid)
-        {
-            try
+            if (id == null)
             {
-                _context.Update(reservation);
+                return NotFound();
+            }
+
+            var reservation = await _context.Reservations
+                .Include(r => r.Spot)
+                .FirstOrDefaultAsync(m => m.ID == id);
+
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+
+            return View(reservation);
+        }
+
+        // GET: /Reservations/Create
+        [HttpGet("Create")]
+        public IActionResult Create()
+        {
+            ViewData["UserID"] = new SelectList(_context.Attendants, "ID", "Name");
+            ViewData["SpotID"] = new SelectList(_context.ParkingSpots, "ID", "Number");
+            return View();
+        }
+
+        // POST: /Reservations/Create
+        [HttpPost("Create")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("ID,UserID,SpotID,ReservationDate,Status")] Reservation reservation)
+        {
+            ModelState.Remove("User");
+            ModelState.Remove("Spot");
+
+            if (ModelState.IsValid)
+            {
+                _context.Add(reservation);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewData["UserID"] = new SelectList(_context.Attendants, "ID", "Name", reservation.UserID);
+            ViewData["SpotID"] = new SelectList(_context.ParkingSpots, "ID", "Number", reservation.SpotID);
+            return View(reservation);
+        }
+
+        // GET: /Reservations/Edit/5
+        [HttpGet("Edit/{id?}")]
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var reservation = await _context.Reservations.FindAsync(id);
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+
+            ViewData["UserID"] = new SelectList(_context.Attendants, "ID", "Name", reservation.UserID);
+            ViewData["SpotID"] = new SelectList(_context.ParkingSpots, "ID", "Number", reservation.SpotID);
+            return View(reservation);
+        }
+
+        // POST: /Reservations/Edit/5
+        [HttpPost("Edit/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("ID,UserID,SpotID,ReservationDate,Status")] Reservation reservation)
+        {
+            if (id != reservation.ID)
+            {
+                return NotFound();
+            }
+
+            ModelState.Remove("User");
+            ModelState.Remove("Spot");
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(reservation);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!ReservationExists(reservation.ID))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewData["UserID"] = new SelectList(_context.Attendants, "ID", "Name", reservation.UserID);
+            ViewData["SpotID"] = new SelectList(_context.ParkingSpots, "ID", "Number", reservation.SpotID);
+            return View(reservation);
+        }
+
+        // GET: /Reservations/Delete/5
+        [HttpGet("Delete/{id?}")]
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var reservation = await _context.Reservations
+                .Include(r => r.Spot)
+                .FirstOrDefaultAsync(m => m.ID == id);
+
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+
+            return View(reservation);
+        }
+
+        // POST: /Reservations/Delete/5
+        [HttpPost("Delete/{id}"), ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var reservation = await _context.Reservations.FindAsync(id);
+            if (reservation != null)
+            {
+                _context.Reservations.Remove(reservation);
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ReservationExists(reservation.ID))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+
             return RedirectToAction(nameof(Index));
         }
-        return View(reservation);
-    }
 
-    // GET: RESERVATIONS/Delete/5
-    public async Task<IActionResult> Delete(int? id)
-    {
-        if (id == null)
+        private bool ReservationExists(int id)
         {
-            return NotFound();
+            return _context.Reservations.Any(e => e.ID == id);
         }
-
-        var reservation = await _context.Reservations
-            .FirstOrDefaultAsync(m => m.ID == id);
-        if (reservation == null)
-        {
-            return NotFound();
-        }
-
-        return View(reservation);
-    }
-
-    // POST: RESERVATIONS/Delete/5
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? id)
-    {
-        var reservation = await _context.Reservations.FindAsync(id);
-        if (reservation != null)
-        {
-            _context.Reservations.Remove(reservation);
-        }
-
-        await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
-    }
-
-    private bool ReservationExists(int? id)
-    {
-        return _context.Reservations.Any(e => e.ID == id);
     }
 }

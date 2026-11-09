@@ -1,59 +1,70 @@
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @model ServerApp.Models.Reservation
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Редагувати бронювання";
+    var users = ViewBag.UserID as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+    var spots = ViewBag.SpotID as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
 }
 
-<h1>Edit</h1>
-
-<h4>Reservation</h4>
+<h2>Редагувати бронювання #@Model.ID</h2>
 <hr />
+
 <div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="ID" />
-            <div class="form-group">
-                <label asp-for="UserID" class="control-label"></label>
-                <input asp-for="UserID" class="form-control" />
-                <span asp-validation-for="UserID" class="text-danger"></span>
+    <div class="col-md-6">
+        <form action="/Reservations/Edit/@Model.ID" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="ID" value="@Model.ID" />
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Працівник</label>
+                <select name="UserID" class="form-select" required>
+                    <option value="">-- Оберіть працівника --</option>
+                    @if (users != null)
+                    {
+                        foreach (var item in users)
+                        {
+                            var isSelected = item.Value == Model.UserID.ToString() ? "selected" : "";
+                            <option value="@item.Value" selected="@isSelected">@item.Text</option>
+                        }
+                    }
+                </select>
             </div>
-            <div class="form-group">
-                <label asp-for="User" class="control-label"></label>
-                <input asp-for="User" class="form-control" />
-                <span asp-validation-for="User" class="text-danger"></span>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Паркувальне місце</label>
+                <select name="SpotID" class="form-select" required>
+                    <option value="">-- Оберіть місце --</option>
+                    @if (spots != null)
+                    {
+                        foreach (var item in spots)
+                        {
+                            var isSelected = item.Value == Model.SpotID.ToString() ? "selected" : "";
+                            <option value="@item.Value" selected="@isSelected">@item.Text</option>
+                        }
+                    }
+                </select>
             </div>
-            <div class="form-group">
-                <label asp-for="SpotID" class="control-label"></label>
-                <input asp-for="SpotID" class="form-control" />
-                <span asp-validation-for="SpotID" class="text-danger"></span>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Дата та час бронювання</label>
+                <input name="ReservationDate" class="form-control" type="datetime-local" value="@Model.ReservationDate.ToString("yyyy-MM-ddTHH:mm")" required />
             </div>
-            <div class="form-group">
-                <label asp-for="Spot" class="control-label"></label>
-                <input asp-for="Spot" class="form-control" />
-                <span asp-validation-for="Spot" class="text-danger"></span>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Статус</label>
+                <select name="Status" class="form-select" required>
+                    <option value="Active" selected="@(Model.Status?.StartsWith("Active") == true ? "selected" : null)">Active (Активне)</option>
+                    <option value="Закрито" selected="@(Model.Status?.StartsWith("Закрито") == true ? "selected" : null)">Закрито / Заблоковано</option>
+                    <option value="Reserved" selected="@(Model.Status?.StartsWith("Reserved") == true ? "selected" : null)">Reserved (Заброньовано)</option>
+                    <option value="Completed" selected="@(Model.Status?.StartsWith("Completed") == true ? "selected" : null)">Completed (Завершено)</option>
+                </select>
             </div>
-            <div class="form-group">
-                <label asp-for="ReservationDate" class="control-label"></label>
-                <input asp-for="ReservationDate" class="form-control" />
-                <span asp-validation-for="ReservationDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-warning">Зберегти зміни</button>
+                <a href="/Reservations" class="btn btn-secondary ms-2">Назад до списку</a>
             </div>
         </form>
     </div>
 </div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}

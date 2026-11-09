@@ -1,60 +1,107 @@
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @model ServerApp.Models.Reservation
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Створити бронювання";
+    var users = ViewBag.UserID as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+    var spots = ViewBag.SpotID as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+    var today = DateTime.Now.ToString("yyyy-MM-dd");
+    var currentHour = DateTime.Now.Hour.ToString("D2");
 }
 
-<h1>Create</h1>
-
-<h4>Reservation</h4>
+<h2>Створити бронювання</h2>
 <hr />
+
 <div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="col-md-6">
+        <form action="/Reservations/Create" method="post" onsubmit="prepareDateTime()">
+            @Html.AntiForgeryToken()
 
-            <div class="form-group">
-                <label asp-for="UserID" class="control-label"></label>
-                <input asp-for="UserID" class="form-control" />
-                <span asp-validation-for="UserID" class="text-danger"></span>
+            <!-- Приховане поле для підсумкової дати та часу -->
+            <input type="hidden" id="fullReservationDate" name="ReservationDate" />
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Працівник</label>
+                <select name="UserID" class="form-select" required>
+                    <option value="">-- Оберіть працівника --</option>
+                    @if (users != null)
+                    {
+                        foreach (var item in users)
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    }
+                </select>
             </div>
 
-            <div class="form-group">
-                <label asp-for="User" class="control-label"></label>
-                <input asp-for="User" class="form-control" />
-                <span asp-validation-for="User" class="text-danger"></span>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Паркувальне місце</label>
+                <select name="SpotID" class="form-select" required>
+                    <option value="">-- Оберіть місце --</option>
+                    @if (spots != null)
+                    {
+                        foreach (var item in spots)
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    }
+                </select>
             </div>
 
-            <div class="form-group">
-                <label asp-for="SpotID" class="control-label"></label>
-                <input asp-for="SpotID" class="form-control" />
-                <span asp-validation-for="SpotID" class="text-danger"></span>
+            <!-- Дата та Час від початку години -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Дата початку</label>
+                    <input type="date" id="startDate" class="form-control" value="@today" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Час (початок години)</label>
+                    <select id="startHour" class="form-select" required>
+                        @for (int h = 0; h < 24; h++)
+                        {
+                            var hourStr = h.ToString("D2");
+                            var isSelected = hourStr == currentHour ? "selected" : "";
+                            <option value="@hourStr" selected="@isSelected">@hourStr:00</option>
+                        }
+                    </select>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Spot" class="control-label"></label>
-                <input asp-for="Spot" class="form-control" />
-                <span asp-validation-for="Spot" class="text-danger"></span>
+            <!-- Тривалість у годинах -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Тривалість (вибір годин)</label>
+                <select name="DurationHours" class="form-select" required>
+                    <option value="1">1 година</option>
+                    <option value="2">2 години</option>
+                    <option value="3">3 години</option>
+                    <option value="4">4 години</option>
+                    <option value="8">8 годин</option>
+                    <option value="12">12 годин</option>
+                    <option value="24">24 години (доба)</option>
+                </select>
             </div>
 
-            <div class="form-group">
-                <label asp-for="ReservationDate" class="control-label"></label>
-                <input asp-for="ReservationDate" class="form-control" />
-                <span asp-validation-for="ReservationDate" class="text-danger"></span>
+            <!-- Вибір статусу (включаючи Закрито) -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Статус місця / Бронювання</label>
+                <select name="Status" class="form-select" required>
+                    <option value="Active">Active (Активне)</option>
+                    <option value="Закрито">Закрито / Заблоковано</option>
+                    <option value="Reserved">Reserved (Заброньовано)</option>
+                    <option value="Completed">Completed (Завершено)</option>
+                </select>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Зберегти</button>
+                <a href="/Reservations" class="btn btn-secondary ms-2">Назад до списку</a>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+<script>
+    function prepareDateTime() {
+    const dateVal = document.getElementById('startDate').value;
+    const hourVal = document.getElementById('startHour').value;
+    document.getElementById('fullReservationDate').value = `${dateVal}T${hourVal}:

@@ -88,8 +88,12 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// 1. Пряме перенаправлення з головної сторінки (/) на сторінку авторизації (/Auth/Login)
+app.MapGet("/", () => Results.Redirect("/Auth/Login"));
+
+// 2. Зміна дефолтного маршруту на AuthController / Login
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=ParkingSpots}/{action=Index}/{id?}");
+    pattern: "{controller=Auth}/{action=Login}/{id?}");
 
 app.Run();
