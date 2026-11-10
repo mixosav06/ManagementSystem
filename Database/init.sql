@@ -38,3 +38,6 @@ INSERT INTO ParkingSpots (Number, Status, UserID) VALUES
 
 INSERT INTO Reservations (UserID, SpotID, ReservationDate, Status) VALUES 
 (1, 2, CURRENT_TIMESTAMP, 'Active');
+   CREATE UNIQUE INDEX IF NOT EXISTS IX_Attendants_Email ON Attendants(Email);
+   CREATE INDEX IF NOT EXISTS IX_Reservations_AttendantID ON Reservations(AttendantID);
+   CREATE INDEX IF NOT EXISTS IX_Reservations_SpotID ON Reservations(SpotID);
