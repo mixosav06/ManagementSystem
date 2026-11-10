@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using ClientApp.Services;
+using ClientApp.ViewModels;
+using ClientApp.Views;
+using Microsoft.Extensions.Logging;
 
 namespace ClientApp
 {
@@ -15,8 +18,22 @@ namespace ClientApp
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
+            // Сервіси
+            builder.Services.AddSingleton<HttpClient>();
+            builder.Services.AddSingleton<ApiService>();
+
+            // ViewModels
+            builder.Services.AddTransient<LoginViewModel>();
+            builder.Services.AddTransient<ItemsViewModel>();
+            builder.Services.AddTransient<ActionViewModel>();
+
+            // Сторінки
+            builder.Services.AddTransient<LoginPage>();
+            builder.Services.AddTransient<ItemsPage>();
+            builder.Services.AddTransient<ActionPage>();
+
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
 
             return builder.Build();

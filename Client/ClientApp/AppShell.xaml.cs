@@ -8,6 +8,7 @@ public partial class AppShell : Shell
     {
         InitializeComponent();
 
-        Routing.RegisterRoute("ActionPage", typeof(ActionPage));
+        // ActionPage відкривається поверх ItemsPage (навігація "ActionPage?SpotID=3")
+        Routing.RegisterRoute(nameof(ActionPage), typeof(ActionPage));
     }
 }

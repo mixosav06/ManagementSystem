@@ -1,7 +1,7 @@
 ﻿namespace ClientApp.Models;
 
+// UserID не передаємо: сервер бере його з JWT-токена.
 public class CreateActionModel
 {
-    public int UserID { get; set; }
     public int SpotID { get; set; }
 }

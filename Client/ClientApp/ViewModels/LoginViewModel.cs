@@ -1,26 +1,47 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using ClientApp.Services;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace ClientApp.ViewModels;
 
 public partial class LoginViewModel : ObservableObject
 {
-    [ObservableProperty]
-    private string _email = string.Empty;
+    private readonly ApiService _api;
+
+    public LoginViewModel(ApiService api) => _api = api;
 
     [ObservableProperty]
-    private string _password = string.Empty;
+    [NotifyCanExecuteChangedFor(nameof(LoginCommand))]
+    public partial bool IsBusy { get; set; }
 
-    [RelayCommand]
+    [ObservableProperty]
+    public partial string Email { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string Password { get; set; } = string.Empty;
+
+    [RelayCommand(CanExecute = nameof(CanLogin))]
     private async Task LoginAsync()
     {
         if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
         {
-            await Shell.Current.DisplayAlert("Помилка", "Введіть Email та пароль", "OK");
+            await Shell.Current.DisplayAlertAsync("Помилка", "Введіть Email та пароль", "OK");
             return;
         }
 
-        // Перехід до списку паркомісць
+        IsBusy = true;
+        var result = await _api.LoginAsync(Email.Trim(), Password);
+        IsBusy = false;
+
+        if (!result.Success)
+        {
+            await Shell.Current.DisplayAlertAsync("Помилка входу", result.Error ?? "Невідома помилка", "OK");
+            return;
+        }
+
+        Password = string.Empty;
         await Shell.Current.GoToAsync("//ItemsPage");
     }
+
+    private bool CanLogin() => !IsBusy;
 }
