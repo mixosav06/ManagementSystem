@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ServerApp.Data;
@@ -5,6 +6,7 @@ using ServerApp.Models;
 
 namespace ServerApp.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [Route("Attendants")]
     public class AttendantsController : Controller
     {
@@ -49,6 +51,7 @@ namespace ServerApp.Controllers
         {
             if (ModelState.IsValid)
             {
+                attendant.PasswordHash = BCrypt.Net.BCrypt.HashPassword(attendant.PasswordHash);
                 _context.Add(attendant);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -75,11 +78,21 @@ namespace ServerApp.Controllers
         {
             if (id != attendant.ID) return NotFound();
 
+            ModelState.Remove(nameof(Attendant.PasswordHash));
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(attendant);
+                    var existing = await _context.Attendants.FindAsync(id);
+                    if (existing == null) return NotFound();
+
+                    existing.Name = attendant.Name;
+                    existing.Email = attendant.Email;
+                    // Порожнє поле = залишити старий пароль; інакше хешуємо новий
+                    if (!string.IsNullOrWhiteSpace(attendant.PasswordHash))
+                        existing.PasswordHash = BCrypt.Net.BCrypt.HashPassword(attendant.PasswordHash);
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)

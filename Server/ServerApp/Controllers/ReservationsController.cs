@@ -7,6 +7,7 @@ using ServerApp.Models;
 
 namespace ServerApp.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [Route("Reservations")]
     public class ReservationsController : Controller
     {

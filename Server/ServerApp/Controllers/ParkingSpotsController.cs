@@ -6,7 +6,7 @@ using ServerApp.Models;
 
 namespace ServerApp.Controllers;
 
-//[Authorize]
+[Authorize(Roles = "Admin")]
 [Route("[controller]")]
 public class ParkingSpotsController : Controller
 {
