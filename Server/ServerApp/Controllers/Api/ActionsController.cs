@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using ServerApp.Data;
 using ServerApp.DTOs;
 using ServerApp.Models;
@@ -20,38 +20,36 @@ public class ActionsController : ControllerBase
         _context = context;
     }
 
-    // POST: api/actions — створення нового бронювання з валідацією
+    // POST: api/actions — бронювання місця від імені користувача з токена
     [HttpPost]
     public async Task<IActionResult> CreateAction([FromBody] CreateActionDto dto)
     {
-        if (!ModelState.IsValid)
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+        if (!int.TryParse(userIdClaim, out var userId))
         {
-            return BadRequest(ModelState);
+            return Unauthorized(new { message = "Токен не містить ідентифікатора користувача." });
         }
 
-        var userExists = await _context.Attendants.AnyAsync(u => u.ID == dto.UserID);
         var spot = await _context.ParkingSpots.FindAsync(dto.SpotID);
-
-        if (!userExists)
-        {
-            return BadRequest(new { Message = $"Працівника з ID {dto.UserID} не знайдено." });
-        }
-
         if (spot == null)
         {
-            return BadRequest(new { Message = $"Паркувальне місце з ID {dto.SpotID} не знайдено." });
+            return BadRequest(new { message = $"Паркувальне місце з ID {dto.SpotID} не знайдено." });
+        }
+
+        if (spot.Status != "Free")
+        {
+            return Conflict(new { message = $"Місце {spot.Number} уже зайняте." });
         }
 
         var reservation = new Reservation
         {
-            UserID = dto.UserID,
+            UserID = userId,
             SpotID = dto.SpotID,
             ReservationDate = DateTime.UtcNow,
             Status = "Active"
         };
 
         spot.Status = "Occupied";
-
         _context.Reservations.Add(reservation);
         await _context.SaveChangesAsync();
 
