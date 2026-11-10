@@ -1,34 +1,61 @@
 ﻿using System.Collections.ObjectModel;
+using ClientApp.Models;
+using ClientApp.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ClientApp.Models;
 
 namespace ClientApp.ViewModels;
 
 public partial class ItemsViewModel : ObservableObject
 {
+    private readonly ApiService _api;
+
+    public ItemsViewModel(ApiService api) => _api = api;
+
     [ObservableProperty]
-    private ObservableCollection<SpotItem> _items = new();
+    public partial ObservableCollection<SpotItem> Items { get; set; } = new();
 
-    public ItemsViewModel()
-    {
-        LoadMockItems();
-    }
+    [ObservableProperty]
+    public partial bool IsBusy { get; set; }
 
+    // Викликається зі сторінки в OnAppearing, тож список оновлюється після повернення з бронювання.
     [RelayCommand]
-    private void LoadMockItems()
+    private async Task LoadItemsAsync()
     {
-        Items = new ObservableCollection<SpotItem>
+        if (IsBusy) return;
+        IsBusy = true;
+
+        var result = await _api.GetItemsAsync();
+        IsBusy = false;
+
+        if (result.Unauthorized)
         {
-            new SpotItem { ID = 1, Number = 101, Status = "Free" },
-            new SpotItem { ID = 2, Number = 102, Status = "Occupied" },
-            new SpotItem { ID = 3, Number = 103, Status = "Free" }
-        };
+            await Shell.Current.DisplayAlertAsync("Сесія завершилась", "Увійдіть знову.", "OK");
+            await Shell.Current.GoToAsync("//LoginPage");
+            return;
+        }
+
+        if (!result.Success)
+        {
+            await Shell.Current.DisplayAlertAsync("Помилка", result.Error ?? "Не вдалося завантажити місця", "OK");
+            return;
+        }
+
+        Items = new ObservableCollection<SpotItem>(result.Data!);
+    }
+
+    // Параметр необов'язковий: якщо передати вибране місце, воно підставиться на сторінку бронювання.
+    [RelayCommand]
+    private async Task GoToActionAsync(SpotItem? spot)
+    {
+        var route = spot is null ? "ActionPage" : $"ActionPage?SpotID={spot.ID}";
+        await Shell.Current.GoToAsync(route);
     }
 
     [RelayCommand]
-    private async Task GoToActionAsync()
+    private async Task LogoutAsync()
     {
-        await Shell.Current.GoToAsync("ActionPage");
+        _api.Logout();
+        await Shell.Current.GoToAsync("//LoginPage");
     }
 }

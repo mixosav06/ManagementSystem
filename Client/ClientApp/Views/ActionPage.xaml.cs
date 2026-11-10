@@ -1,9 +1,12 @@
-﻿namespace ClientApp.Views;
+﻿using ClientApp.ViewModels;
+
+namespace ClientApp.Views;
 
 public partial class ActionPage : ContentPage
 {
-    public ActionPage()
+    public ActionPage(ActionViewModel vm)
     {
         InitializeComponent();
+        BindingContext = vm;
     }
 }

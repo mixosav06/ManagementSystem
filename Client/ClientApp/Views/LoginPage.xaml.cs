@@ -1,9 +1,12 @@
-﻿namespace ClientApp.Views;
+﻿using ClientApp.ViewModels;
+
+namespace ClientApp.Views;
 
 public partial class LoginPage : ContentPage
 {
-    public LoginPage()
+    public LoginPage(LoginViewModel vm)
     {
-        InitializeComponent(); // Обов'язковий рядок для завантаження UI з XAML
+        InitializeComponent();
+        BindingContext = vm;
     }
 }
