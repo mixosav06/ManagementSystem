@@ -15,7 +15,7 @@ public class ApiService
 
     private readonly HttpClient _http;
 
-    // Android-емулятор бачитиме localhost комп'ютера як 10.0.2.2.
+    // Android-емулятор бачить localhost комп'ютера як 10.0.2.2.
     // Порт 7292 працює через HTTPS (https://)
     public static string BaseUrl =>
         DeviceInfo.Platform == DevicePlatform.Android

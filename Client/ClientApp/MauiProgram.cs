@@ -23,7 +23,6 @@ namespace ClientApp
             {
                 var handler = new HttpClientHandler();
 #if DEBUG
-                // Дозволяє з'єднуватися з HTTPS локального сервера на етапі розробки
                 handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
 #endif
                 return new HttpClient(handler);
