@@ -2,31 +2,57 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ClientApp.ViewModels"
+             xmlns:models="clr-namespace:ClientApp.Models"
              x:Class="ClientApp.Views.ItemsPage"
              x:DataType="vm:ItemsViewModel"
              Title="Паркувальні місця"
              BackgroundColor="#F4F9F5">
 
     <Grid RowDefinitions="*, Auto" Padding="15">
+
         <CollectionView Grid.Row="0" ItemsSource="{Binding Items}">
+            <CollectionView.EmptyView>
+                <Label Text="Список місць порожній" 
+                       HorizontalOptions="Center" 
+                       VerticalOptions="Center" 
+                       TextColor="#666666" 
+                       FontSize="16" />
+            </CollectionView.EmptyView>
+
             <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Border Margin="0,5" 
-                            Padding="15" 
+                <DataTemplate x:DataType="models:SpotItem">
+                    <Border Margin="0,0,0,10" 
+                            Padding="12,15" 
                             Stroke="#A5D6A7" 
                             StrokeThickness="1.5" 
                             BackgroundColor="White"
                             StrokeShape="RoundRectangle 10">
-                        <HorizontalStackLayout Spacing="15">
-                            <Label Text="{Binding Number, StringFormat='Місце #{0}'}" 
-                                   FontSize="18" 
+
+                        <!-- Колонки: 1 — ID, 2 — Номер місця, 3 — Статус -->
+                        <Grid ColumnDefinitions="Auto, *, Auto" VerticalOptions="Center">
+
+                            <Label Grid.Column="0"
+                                   Text="{Binding Id, StringFormat='ID: {0}'}" 
+                                   FontSize="15" 
                                    FontAttributes="Bold"
-                                   TextColor="#1B5E20"/>
-                            <Label Text="{Binding Status}" 
-                                   FontSize="16" 
+                                   TextColor="#757575"
+                                   VerticalOptions="Center"
+                                   Margin="0,0,15,0" />
+
+                            <Label Grid.Column="1"
+                                   Text="{Binding Number, StringFormat='Місце #{0}'}" 
+                                   FontSize="17" 
+                                   FontAttributes="Bold"
+                                   TextColor="#1B5E20"
+                                   VerticalOptions="Center" />
+
+                            <Label Grid.Column="2"
+                                   Text="{Binding Status}" 
+                                   FontSize="15" 
+                                   FontAttributes="Bold"
                                    TextColor="#2E7D32"
-                                   VerticalOptions="Center"/>
-                        </HorizontalStackLayout>
+                                   VerticalOptions="Center" />
+                        </Grid>
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
@@ -37,7 +63,9 @@
                 Command="{Binding GoToActionCommand}" 
                 BackgroundColor="#2E7D32" 
                 TextColor="White" 
+                HeightRequest="48"
                 CornerRadius="8"
+                FontAttributes="Bold"
                 Margin="0,10,0,0"/>
     </Grid>
 </ContentPage>

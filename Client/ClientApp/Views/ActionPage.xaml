@@ -24,6 +24,15 @@
                 BackgroundColor="#2E7D32" 
                 TextColor="White"
                 CornerRadius="8"
+                HeightRequest="48"
+                FontAttributes="Bold"
                 Margin="0,20,0,0"/>
+
+        <Button Text="Назад" 
+                Command="{Binding GoBackCommand}" 
+                BackgroundColor="#757575" 
+                TextColor="White"
+                CornerRadius="8"
+                HeightRequest="48"/>
     </VerticalStackLayout>
 </ContentPage>

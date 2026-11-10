@@ -47,5 +47,11 @@ public partial class ActionViewModel : ObservableObject
         await Shell.Current.GoToAsync("..");
     }
 
+    [RelayCommand]
+    private async Task GoBackAsync()
+    {
+        await Shell.Current.GoToAsync("..");
+    }
+
     private bool CanCreate() => !IsBusy;
 }
